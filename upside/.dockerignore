@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts (we rebuild in container)
+obj/upside
+obj/libupside.so
+obj/CMakeCache.txt
+obj/CMakeFiles/
+obj/Makefile
+
+# Development
+.devcontainer
+.vscode
+*.swp
+*~
+*.bak
+
+# Documentation
+doc/
+Doxyfile
+README.md
+LICENSE
+Release_note
+
+# Examples and tutorials (not needed for production)
+example/
+tutorial/
+web/
+start/
+utilities/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+._*
+
+# Local files
+source.sh
+run/
+bin/
+data/
+notes/
+env/
+**inputs/
+**outputs/

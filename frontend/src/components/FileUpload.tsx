@@ -22,8 +22,9 @@ async function uploadFileToServer(file: File, uploadUrl: string) {
 
   if (!response.ok) {
     const errorDetail = await response.json().catch(() => ({}));
-    console.error("Server error detail:", errorDetail);
-    throw new Error(`Upload failed: ${response.statusText}`);
+    throw new Error(
+      errorDetail.detail || `Upload failed: ${response.statusText}`,
+    );
   }
 
   return response.json();
@@ -41,6 +42,7 @@ export default function FileUpload({
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -55,14 +57,15 @@ export default function FileUpload({
   const handleFiles = useCallback(
     async (files: File[]) => {
       onFileSelect?.(files);
+      setError(null);
 
       setIsUploading(true);
       try {
         for (const file of files) {
           await uploadFileToServer(file, uploadUrl);
         }
-      } catch (error) {
-        console.error("Upload error:", error);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload failed");
       } finally {
         setIsUploading(false);
       }
@@ -119,11 +122,9 @@ export default function FileUpload({
             <p className="text-gray-400 text-sm">
               {isUploading
                 ? "Uploading..."
-                : "Drag and drop or click to upload"}
+                : "Drag and drop or click to upload."}
             </p>
-            <p className="text-gray-400 text-sm">
-              Accepts {accept} between {minSize} and {maxSize}.
-            </p>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
         </div>
       </label>

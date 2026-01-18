@@ -7,6 +7,9 @@ router = APIRouter(prefix="/file", tags=["file"])
 
 @router.post("/upload")
 async def upload_file(file: UploadFile):
+    if not file.filename.endswith(".pdb"):
+        raise HTTPException(status_code=400, detail="Only .pdb files are allowed")
+
     try:
         result = upload_file_to_s3(file.file, file.filename, file.content_type)
         return result

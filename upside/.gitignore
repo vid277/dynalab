@@ -3,11 +3,14 @@ run/
 bin/
 data/
 doc/
+notes/
+env/
 *~
 *.swp
 *.vtf
 *.pyc
 a.out
+*.so
 *.dSYM/
 *.o
 *.i
@@ -21,4 +24,6 @@ CMakeFiles/
 .ycm_extra_conf.py
 compile_commands.json
 source.sh
-
+**inputs/
+**outputs/
+.vscode/*

@@ -9,7 +9,6 @@ JOB_QUEUE = "jobs"
 
 _redis_client: redis.Redis | None = None
 
-
 async def get_redis() -> redis.Redis:
     global _redis_client
     if _redis_client is None:
@@ -29,3 +28,12 @@ async def enqueue_job(filename: str) -> str:
     await client.lpush(JOB_QUEUE, json.dumps(job_data))
 
     return job_id
+
+
+async def get_all_jobs() -> list[dict]:
+    client = await get_redis()
+    jobs_raw = await client.lrange(JOB_QUEUE, 0, -1)
+
+    jobs = [json.loads(job) for job in jobs_raw]
+
+    return jobs

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db import init_db
 from handlers.file_handler import router as file_router
+from handlers.queue_handler import router as queue_router
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(file_router)
+app.include_router(queue_router)
 
 
 @app.get("/")

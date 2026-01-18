@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Queue Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background: #16213e;
+            border-radius: 8px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .queue-count {
+            margin-left: auto;
+            font-size: 14px;
+            color: #888;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #16213e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        th {
+            background: #0f3460;
+            color: #00d4ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        tr:hover {
+            background: #1f2b4d;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-uploaded {
+            background: #00ff8820;
+            color: #00ff88;
+        }
+        .status-processing {
+            background: #ffaa0020;
+            color: #ffaa00;
+        }
+        .status-completed {
+            background: #00d4ff20;
+            color: #00d4ff;
+        }
+        .status-failed {
+            background: #ff445520;
+            color: #ff4455;
+        }
+        .job-id {
+            font-family: monospace;
+            font-size: 13px;
+            color: #888;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Job Queue</h1>
+
+    <div class="status-bar">
+        <div class="status-dot"></div>
+        <span>Live updating</span>
+        <span class="queue-count"><span id="count">{{ jobs|length }}</span> jobs in queue</span>
+    </div>
+
+    <div id="queue-container">
+        {% if jobs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Filename</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="queue-body">
+                {% for job in jobs %}
+                <tr>
+                    <td class="job-id">{{ job.job_id }}</td>
+                    <td>{{ job.filename }}</td>
+                    <td><span class="status status-{{ job.status }}">{{ job.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <p>No jobs in queue</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        async function fetchQueue() {
+            try {
+                const response = await fetch('/queue/api');
+                const jobs = await response.json();
+                updateQueue(jobs);
+            } catch (error) {
+                console.error('Failed to fetch queue:', error);
+            }
+        }
+
+        function updateQueue(jobs) {
+            document.getElementById('count').textContent = jobs.length;
+            const container = document.getElementById('queue-container');
+
+            if (jobs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        <p>No jobs in queue</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const rows = jobs.map(job => `
+                <tr>
+                    <td class="job-id">${job.job_id}</td>
+                    <td>${job.filename}</td>
+                    <td><span class="status status-${job.status}">${job.status}</span></td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Filename</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        // Poll every 2 seconds
+        setInterval(fetchQueue, 2000);
+    </script>
+</body>
+</html>

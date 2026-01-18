@@ -34,7 +34,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function FileUpload({
   onFileSelect,
-  accept = "image/*",
+  accept = ".pdb",
   multiple = true,
   minSize = "1.00KB",
   maxSize = "10.00MB",

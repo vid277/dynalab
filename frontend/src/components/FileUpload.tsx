@@ -3,12 +3,33 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { CloudUploadIcon } from "@hugeicons/core-free-icons";
 
 interface FileUploadProps {
-  onFileSelect: (files: File[]) => void;
+  onFileSelect?: (files: File[]) => void;
   accept?: string;
   multiple?: boolean;
   minSize?: string;
   maxSize?: string;
+  uploadUrl?: string;
 }
+
+async function uploadFileToServer(file: File, uploadUrl: string) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(uploadUrl, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorDetail = await response.json().catch(() => ({}));
+    console.error("Server error detail:", errorDetail);
+    throw new Error(`Upload failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function FileUpload({
   onFileSelect,
@@ -16,8 +37,10 @@ export default function FileUpload({
   multiple = true,
   minSize = "1.00KB",
   maxSize = "10.00MB",
+  uploadUrl = `${API_URL}/file/upload`,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -29,26 +52,44 @@ export default function FileUpload({
     setIsDragging(false);
   }, []);
 
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      onFileSelect?.(files);
+
+      setIsUploading(true);
+      try {
+        for (const file of files) {
+          await uploadFileToServer(file, uploadUrl);
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [onFileSelect, uploadUrl],
+  );
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
       const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
-        onFileSelect(multiple ? files : [files[0]]);
+        handleFiles(multiple ? files : [files[0]]);
       }
     },
-    [onFileSelect, multiple],
+    [handleFiles, multiple],
   );
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files || []);
       if (files.length > 0) {
-        onFileSelect(files);
+        handleFiles(files);
       }
     },
-    [onFileSelect],
+    [handleFiles],
   );
 
   return (
@@ -76,7 +117,9 @@ export default function FileUpload({
               Upload files
             </h3>
             <p className="text-gray-400 text-sm">
-              Drag and drop or click to upload
+              {isUploading
+                ? "Uploading..."
+                : "Drag and drop or click to upload"}
             </p>
             <p className="text-gray-400 text-sm">
               Accepts {accept} between {minSize} and {maxSize}.

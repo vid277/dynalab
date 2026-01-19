@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.database import get_db
 from db.models import Job
-from job_queue import get_redis
+from job_queue import enqueue_job
 from operators.file_operator import get_s3_client
 from schemas.job import (
     AdvancedParams,
@@ -25,7 +25,6 @@ from schemas.job import (
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
-JOB_QUEUE = "simulation_jobs"
 INPUT_BUCKET = os.getenv("S3_BUCKET_NAME", "dynalab-pdb-files")
 OUTPUT_BUCKET = os.getenv("S3_OUTPUT_BUCKET", "dynalab-run-results")
 
@@ -50,6 +49,7 @@ async def create_job(
         try:
             parsed_advanced = json.loads(advanced_params)
             AdvancedParams(**parsed_advanced)
+
         except (json.JSONDecodeError, ValueError) as e:
             raise HTTPException(status_code=400, detail=f"Invalid advanced_params: {e}")
 
@@ -64,6 +64,7 @@ async def create_job(
     )
 
     db.add(job)
+
     await db.commit()
     await db.refresh(job)
 
@@ -84,21 +85,18 @@ async def create_job(
         await db.commit()
         raise HTTPException(status_code=500, detail=f"Failed to upload PDB file: {e}")
 
-    redis_client = await get_redis()
-
-    job_data = {
-        "job_id": str(job.job_id),
-        "original_filename": original_filename,
-        "duration": duration,
-        "temperature": temperature,
-        "frame_interval": frame_interval,
-        "seed": seed,
-        "advanced_params": parsed_advanced or {},
-    }
-
-    await redis_client.lpush(JOB_QUEUE, json.dumps(job_data))
+    await enqueue_job(
+        job_id=str(job.job_id),
+        original_filename=original_filename,
+        duration=duration,
+        temperature=temperature,
+        frame_interval=frame_interval,
+        seed=seed,
+        advanced_params=parsed_advanced,
+    )
 
     job.status = "queued"
+
     await db.commit()
 
     return JobSubmitResponse(

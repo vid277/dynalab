@@ -65,6 +65,9 @@ def submit_simulation_job(
             jobDefinition=BATCH_JOB_DEFINITION,
             containerOverrides={
                 "command": command,
+                "environment": [
+                    {"name": "OMP_NUM_THREADS", "value": "2"},
+                ],
             },
         )
 

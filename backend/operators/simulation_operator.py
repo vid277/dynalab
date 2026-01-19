@@ -4,7 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 BATCH_JOB_QUEUE = os.getenv("AWS_BATCH_JOB_QUEUE", "upside-job-queue")
-BATCH_JOB_DEFINITION = os.getenv("AWS_BATCH_JOB_DEFINITION", "upside-simulation")
+BATCH_JOB_DEFINITION = os.getenv("AWS_BATCH_JOB_DEFINITION", "upside-simulation-job")
 INPUT_BUCKET = os.getenv("S3_BUCKET_NAME", "dynalab-pdb-files")
 OUTPUT_BUCKET = os.getenv("S3_OUTPUT_BUCKET", "dynalab-run-results")
 

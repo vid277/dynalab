@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.database import get_db
@@ -28,6 +28,7 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 INPUT_BUCKET = os.getenv("S3_BUCKET_NAME", "dynalab-pdb-files")
 OUTPUT_BUCKET = os.getenv("S3_OUTPUT_BUCKET", "dynalab-run-results")
+MAX_ACTIVE_JOBS_PER_USER = 4
 
 
 @router.post("", response_model=JobSubmitResponse)
@@ -88,17 +89,27 @@ async def create_job(
         await db.commit()
         raise HTTPException(status_code=500, detail=f"Failed to upload PDB file: {e}")
 
-    await enqueue_job(
-        job_id=str(job.job_id),
-        original_filename=original_filename,
-        duration=duration,
-        temperature=temperature,
-        frame_interval=frame_interval,
-        seed=seed,
-        advanced_params=parsed_advanced,
+    active_count_result = await db.execute(
+        select(func.count(Job.job_id)).where(
+            Job.user_id == current_user.id,
+            Job.status.in_(["queued", "running"]),
+        )
     )
+    active_job_count = active_count_result.scalar() or 0
 
-    job.status = "queued"
+    if active_job_count < MAX_ACTIVE_JOBS_PER_USER:
+        await enqueue_job(
+            job_id=str(job.job_id),
+            original_filename=original_filename,
+            duration=duration,
+            temperature=temperature,
+            frame_interval=frame_interval,
+            seed=seed,
+            advanced_params=parsed_advanced,
+        )
+        job.status = "queued"
+    else:
+        job.status = "user_queued"
 
     await db.commit()
 

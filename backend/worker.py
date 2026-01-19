@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import boto3
 import redis.asyncio as redis
 from dotenv import load_dotenv
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 load_dotenv()
@@ -20,6 +20,7 @@ JOB_QUEUE = "simulation_jobs"
 POLL_INTERVAL = 2
 BATCH_CHECK_INTERVAL = 10
 OUTPUT_BUCKET = os.getenv("S3_OUTPUT_BUCKET", "dynalab-run-results")
+MAX_ACTIVE_JOBS_PER_USER = 4
 
 from operators.simulation_operator import get_batch_job_status, submit_simulation_job
 
@@ -113,7 +114,46 @@ async def fetch_and_parse_log(job_id: str) -> dict:
         return {}
 
 
-async def check_running_jobs(db: AsyncSession) -> None:
+async def promote_user_queued_job(user_id, db: AsyncSession, redis_client: redis.Redis) -> None:
+    active_count_result = await db.execute(
+        select(func.count(Job.job_id)).where(
+            Job.user_id == user_id,
+            Job.status.in_(["queued", "running"]),
+        )
+    )
+
+    active_job_count = active_count_result.scalar() or 0
+
+    if active_job_count >= MAX_ACTIVE_JOBS_PER_USER:
+        return
+
+    result = await db.execute(
+        select(Job).where(Job.user_id == user_id, Job.status == "user_queued").order_by(Job.created_at.asc()).limit(1)
+    )
+
+    next_job = result.scalar_one_or_none()
+
+    if not next_job:
+        return
+
+    job_data = {
+        "job_id": str(next_job.job_id),
+        "original_filename": next_job.original_filename,
+        "duration": next_job.duration,
+        "temperature": next_job.temperature,
+        "frame_interval": next_job.frame_interval,
+        "seed": next_job.seed,
+        "advanced_params": next_job.advanced_params,
+    }
+    await redis_client.lpush(JOB_QUEUE, json.dumps(job_data))
+
+    await db.execute(update(Job).where(Job.job_id == next_job.job_id).values(status="queued"))
+    await db.commit()
+
+    print(f"[Worker] Promoted user_queued job {next_job.job_id} to queue")
+
+
+async def check_running_jobs(db: AsyncSession, redis_client: redis.Redis) -> None:
     result = await db.execute(select(Job).where(Job.status == "running").where(Job.aws_batch_job_id.isnot(None)))
     running_jobs = result.scalars().all()
 
@@ -143,6 +183,8 @@ async def check_running_jobs(db: AsyncSession) -> None:
                 await db.commit()
                 print(f"[Worker] Job {job.job_id} completed")
 
+                await promote_user_queued_job(job.user_id, db, redis_client)
+
             elif mapped_status == "failed":
                 error_reason = batch_status.get("status_reason", "Unknown error")
                 await db.execute(
@@ -157,6 +199,8 @@ async def check_running_jobs(db: AsyncSession) -> None:
 
                 await db.commit()
                 print(f"[Worker] Job {job.job_id} failed: {error_reason}")
+
+                await promote_user_queued_job(job.user_id, db, redis_client)
 
         except Exception as e:
             print(f"[Worker] Error checking job {job.job_id}: {e}")
@@ -188,7 +232,7 @@ async def main():
             current_time = asyncio.get_event_loop().time()
 
             if current_time - last_batch_check >= BATCH_CHECK_INTERVAL:
-                await check_running_jobs(db)
+                await check_running_jobs(db, redis_client)
                 last_batch_check = current_time
 
         await asyncio.sleep(POLL_INTERVAL)

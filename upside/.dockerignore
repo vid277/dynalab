@@ -2,13 +2,6 @@
 .git
 .gitignore
 
-# Build artifacts (we rebuild in container)
-obj/upside
-obj/libupside.so
-obj/CMakeCache.txt
-obj/CMakeFiles/
-obj/Makefile
-
 # Development
 .devcontainer
 .vscode
@@ -18,17 +11,8 @@ obj/Makefile
 
 # Documentation
 doc/
-Doxyfile
 README.md
 LICENSE
-Release_note
-
-# Examples and tutorials (not needed for production)
-example/
-tutorial/
-web/
-start/
-utilities/
 
 # Python cache
 __pycache__/

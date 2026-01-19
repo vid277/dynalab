@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import init_db
+from handlers.auth_handler import router as auth_router
 from handlers.file_handler import router as file_router
 from handlers.job_handler import router as job_router
 from handlers.queue_handler import router as queue_router
@@ -28,6 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(file_router)
 app.include_router(job_router)
 app.include_router(queue_router)

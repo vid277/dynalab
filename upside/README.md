@@ -1,6 +1,6 @@
 # Upside2 Molecular Dynamics
 
-Upside is a coarse-grained molecular dynamics simulator. This guide shows how to get started using the provided VS Code Dev Container, GitHub Codespaces, or Docker, and how to run example simulations in the `start/` folder.
+Upside is a coarse-grained molecular dynamics simulator. This guide shows how to get started using the provided VS Code Dev Container, GitHub Codespaces, or Docker.
 
 ## Quick Start
 
@@ -82,45 +82,5 @@ docker run --rm \
 
 To run a script interactively:
 ```bash
-docker run --it --rm upside2-md \
-  python example/01.GettingStarted/0.run.py
+docker run -it --rm upside2-md bash
 ```
-
----
-
-## Running Simulations from `start/`
-
-The `start/` folder contains scripts for common simulation workflows. Outputs are written to `start/outputs/<sim_id>/`.
-
-1. Change into `start/`:
-   ```bash
-   cd start
-   ```
-
-2. Single-Replica Simulation:
-   ```bash
-   python Single_Replica.py \
-     <pdb_id> <pdb_dir> <sim_id> \
-     <duration> <frame_interval> \
-     <continue_sim> <temperature> <restraints>
-   ```
-   Example:
-   ```bash
-   python Single_Replica.py \
-     1dfn ../example/01.GettingStarted/pdb \
-     sim1 1e7 100 False 0.85 None
-   ```
-
-3. Pulling Simulation (velocity or tension):
-   ```bash
-   python Pulling_Simulations.py \
-     <pdb_id> <pdb_dir> <sim_id> \
-     <duration> <frame_interval> \
-     <sim_type> <continue_sim> <temperature> <restraints>
-   ```
-   Example (tension):
-   ```bash
-   python Pulling_Simulations.py \
-     1dfn ../example/01.GettingStarted/pdb \
-     sim1 1e7 100 tension False 0.85 None
-   ```

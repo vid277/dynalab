@@ -9,7 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.database import get_db
-from db.models import Job
+from db.models import Job, User
+from utils.deps import get_current_user
 from job_queue import enqueue_job
 from operators.file_operator import get_s3_client
 from schemas.job import (

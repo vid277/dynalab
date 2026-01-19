@@ -70,29 +70,26 @@ async def process_new_job(job_data: dict, db: AsyncSession) -> None:
 def parse_simulation_log(log_content: str) -> dict:
     results = {}
 
-    residue_match = re.search(r"(\d+)\s*residues", log_content)
-    if residue_match:
-        results["residue_count"] = int(residue_match.group(1))
-
-    atom_match = re.search(r"(\d+)\s*atoms", log_content)
+    atom_match = re.search(r"n_atom\s+(\d+)", log_content)
     if atom_match:
         results["atom_count"] = int(atom_match.group(1))
+        results["residue_count"] = int(atom_match.group(1)) // 3
 
-    frame_matches = re.findall(r"frame\s+(\d+)", log_content, re.IGNORECASE)
-    if frame_matches:
-        results["frame_count"] = max(int(f) for f in frame_matches)
+    frame_match = re.search(r"(\d+)\s*/\s*(\d+)\s+elapsed", log_content)
+    if frame_match:
+        results["frame_count"] = int(frame_match.group(2))
 
-    potential_matches = re.findall(r"potential[:\s]+(-?[\d.]+)", log_content, re.IGNORECASE)
+    potential_matches = re.findall(r"potential\s+(-?[\d.]+)", log_content, re.IGNORECASE)
     if potential_matches:
         results["final_potential"] = float(potential_matches[-1])
 
-    rg_matches = re.findall(r"(?:rg|radius.of.gyration)[:\s]+(-?[\d.]+)", log_content, re.IGNORECASE)
+    rg_matches = re.findall(r"Rg\s+([\d.]+)\s*A", log_content)
     if rg_matches:
         results["final_rg"] = float(rg_matches[-1])
 
-    hbond_matches = re.findall(r"(?:hbonds?|hydrogen.bonds?)[:\s]+(\d+)", log_content, re.IGNORECASE)
+    hbond_matches = re.findall(r"([\d.]+)\s+hbonds", log_content, re.IGNORECASE)
     if hbond_matches:
-        results["final_hbonds"] = int(hbond_matches[-1])
+        results["final_hbonds"] = int(float(hbond_matches[-1]))
 
     return results
 

@@ -1,13 +1,12 @@
 import { useState, useCallback } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CloudUploadIcon } from "@hugeicons/core-free-icons";
+import { CloudUploadIcon, Loading03Icon } from "@hugeicons/core-free-icons";
+import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
   onFileSelect?: (files: File[]) => void;
   accept?: string;
   multiple?: boolean;
-  minSize?: string;
-  maxSize?: string;
   uploadUrl?: string;
 }
 
@@ -23,7 +22,7 @@ async function uploadFileToServer(file: File, uploadUrl: string) {
   if (!response.ok) {
     const errorDetail = await response.json().catch(() => ({}));
     throw new Error(
-      errorDetail.detail || `Upload failed: ${response.statusText}`,
+      errorDetail.detail || `Upload failed: ${response.statusText}`
     );
   }
 
@@ -36,8 +35,6 @@ export default function FileUpload({
   onFileSelect,
   accept = ".pdb",
   multiple = true,
-  minSize = "1.00KB",
-  maxSize = "10.00MB",
   uploadUrl = `${API_URL}/file/upload`,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -70,7 +67,7 @@ export default function FileUpload({
         setIsUploading(false);
       }
     },
-    [onFileSelect, uploadUrl],
+    [onFileSelect, uploadUrl]
   );
 
   const handleDrop = useCallback(
@@ -82,7 +79,7 @@ export default function FileUpload({
         handleFiles(multiple ? files : [files[0]]);
       }
     },
-    [handleFiles, multiple],
+    [handleFiles, multiple]
   );
 
   const handleFileInput = useCallback(
@@ -92,7 +89,7 @@ export default function FileUpload({
         handleFiles(files);
       }
     },
-    [handleFiles],
+    [handleFiles]
   );
 
   return (
@@ -100,9 +97,12 @@ export default function FileUpload({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`w-full max-w-4xl py-16 text-center cursor-pointer transition-all duration-200 border-2 border-dashed rounded-lg hover:bg-gray-50 ${
-        isDragging ? "border-blue-500 bg-gray-100" : "border-gray-300 bg-white"
-      }`}
+      className={cn(
+        "w-full max-w-4xl py-16 text-center cursor-pointer transition-all duration-200 border-2 border-dashed rounded-lg hover:bg-accent",
+        isDragging
+          ? "border-primary bg-accent"
+          : "border-border bg-card"
+      )}
     >
       <input
         type="file"
@@ -114,17 +114,31 @@ export default function FileUpload({
       />
       <label htmlFor="file-input" className="cursor-pointer">
         <div className="flex flex-col items-center gap-4">
-          <HugeiconsIcon icon={CloudUploadIcon} size={48} color="#666" />
+          {isUploading ? (
+            <HugeiconsIcon
+              icon={Loading03Icon}
+              size={48}
+              className="text-muted-foreground animate-spin"
+            />
+          ) : (
+            <HugeiconsIcon
+              icon={CloudUploadIcon}
+              size={48}
+              className="text-muted-foreground"
+            />
+          )}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg font-semibold text-foreground mb-1">
               Upload files
             </h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted-foreground text-sm">
               {isUploading
                 ? "Uploading..."
                 : "Drag and drop or click to upload."}
             </p>
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && (
+              <p className="text-destructive text-sm mt-2">{error}</p>
+            )}
           </div>
         </div>
       </label>

@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
-  ArrowLeft,
-  Download,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Loader2,
-  Circle,
-} from "lucide-react";
+  ArrowLeft01Icon,
+  Download01Icon,
+  ArrowReloadHorizontalIcon,
+  CheckmarkCircle02Icon,
+  CancelCircleIcon,
+  Clock01Icon,
+  Loading03Icon,
+  RecordIcon,
+} from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -44,36 +54,39 @@ interface JobDetail {
   completed_at?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<
+  JobStatus,
+  {
+    icon: IconSvgElement;
+    variant: "muted" | "warning" | "info" | "success" | "destructive";
+    label: string;
+    animate?: boolean;
+  }
+> = {
   pending: {
-    icon: Circle,
-    color: "text-gray-500",
-    bgColor: "bg-gray-100",
+    icon: RecordIcon,
+    variant: "muted",
     label: "Pending",
   },
   queued: {
-    icon: Clock,
-    color: "text-yellow-500",
-    bgColor: "bg-yellow-50",
+    icon: Clock01Icon,
+    variant: "warning",
     label: "Queued",
   },
   running: {
-    icon: Loader2,
-    color: "text-blue-500",
-    bgColor: "bg-blue-50",
+    icon: Loading03Icon,
+    variant: "info",
     label: "Running",
     animate: true,
   },
   completed: {
-    icon: CheckCircle,
-    color: "text-green-500",
-    bgColor: "bg-green-50",
+    icon: CheckmarkCircle02Icon,
+    variant: "success",
     label: "Completed",
   },
   failed: {
-    icon: XCircle,
-    color: "text-red-500",
-    bgColor: "bg-red-50",
+    icon: CancelCircleIcon,
+    variant: "destructive",
     label: "Failed",
   },
 };
@@ -122,195 +135,213 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <HugeiconsIcon
+          icon={ArrowReloadHorizontalIcon}
+          size={32}
+          className="text-muted-foreground animate-spin"
+        />
       </div>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border">
           <div className="max-w-4xl mx-auto px-4 py-4">
-            <Link
-              to="/jobs"
-              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Jobs
-            </Link>
+            <Button variant="ghost" asChild className="gap-2">
+              <Link to="/jobs">
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+                Back to Jobs
+              </Link>
+            </Button>
           </div>
         </header>
         <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error || "Job not found"}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error || "Job not found"}</AlertDescription>
+          </Alert>
         </main>
       </div>
     );
   }
 
   const config = statusConfig[job.status];
-  const StatusIcon = config.icon;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <Link
-            to="/jobs"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Jobs
-          </Link>
+          <Button variant="ghost" asChild className="gap-2">
+            <Link to="/jobs">
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+              Back to Jobs
+            </Link>
+          </Button>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900">
-              {job.original_filename}
-            </h1>
-            <span
-              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${config.bgColor} ${config.color}`}
-            >
-              <StatusIcon
-                className={`w-4 h-4 ${
-                  "animate" in config && config.animate ? "animate-spin" : ""
-                }`}
-              />
-              {config.label}
-            </span>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-semibold text-foreground">
+                {job.original_filename}
+              </h1>
+              <Badge variant={config.variant} className="gap-2 px-3 py-1">
+                <HugeiconsIcon
+                  icon={config.icon}
+                  size={16}
+                  className={config.animate ? "animate-spin" : ""}
+                />
+                {config.label}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
 
         {job.error_message && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            <strong>Error:</strong> {job.error_message}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>
+              <strong>Error:</strong> {job.error_message}
+            </AlertDescription>
+          </Alert>
         )}
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Parameters</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <dt className="text-sm text-gray-500">Duration</dt>
-              <dd className="text-base font-medium text-gray-900">
-                {job.params.duration}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-gray-500">Temperature</dt>
-              <dd className="text-base font-medium text-gray-900">
-                {job.params.temperature}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-gray-500">Frame Interval</dt>
-              <dd className="text-base font-medium text-gray-900">
-                {job.params.frame_interval}
-              </dd>
-            </div>
-            {job.params.seed && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Parameters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <dt className="text-sm text-gray-500">Seed</dt>
-                <dd className="text-base font-medium text-gray-900">
-                  {job.params.seed}
+                <dt className="text-sm text-muted-foreground">Duration</dt>
+                <dd className="text-base font-medium text-foreground">
+                  {job.params.duration}
                 </dd>
               </div>
-            )}
-          </div>
-        </div>
-
-        {job.results && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Results</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {job.results.residue_count !== undefined && (
+              <div>
+                <dt className="text-sm text-muted-foreground">Temperature</dt>
+                <dd className="text-base font-medium text-foreground">
+                  {job.params.temperature}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-muted-foreground">Frame Interval</dt>
+                <dd className="text-base font-medium text-foreground">
+                  {job.params.frame_interval}
+                </dd>
+              </div>
+              {job.params.seed && (
                 <div>
-                  <dt className="text-sm text-gray-500">Residues</dt>
-                  <dd className="text-base font-medium text-gray-900">
-                    {job.results.residue_count}
-                  </dd>
-                </div>
-              )}
-              {job.results.atom_count !== undefined && (
-                <div>
-                  <dt className="text-sm text-gray-500">Atoms</dt>
-                  <dd className="text-base font-medium text-gray-900">
-                    {job.results.atom_count}
-                  </dd>
-                </div>
-              )}
-              {job.results.frame_count !== undefined && (
-                <div>
-                  <dt className="text-sm text-gray-500">Frames</dt>
-                  <dd className="text-base font-medium text-gray-900">
-                    {job.results.frame_count}
-                  </dd>
-                </div>
-              )}
-              {job.results.final_potential !== undefined && (
-                <div>
-                  <dt className="text-sm text-gray-500">Final Energy</dt>
-                  <dd className="text-base font-medium text-gray-900">
-                    {job.results.final_potential.toFixed(2)}
-                  </dd>
-                </div>
-              )}
-              {job.results.final_rg !== undefined && (
-                <div>
-                  <dt className="text-sm text-gray-500">Radius of Gyration</dt>
-                  <dd className="text-base font-medium text-gray-900">
-                    {job.results.final_rg.toFixed(1)} A
-                  </dd>
-                </div>
-              )}
-              {job.results.final_hbonds !== undefined && (
-                <div>
-                  <dt className="text-sm text-gray-500">H-bonds</dt>
-                  <dd className="text-base font-medium text-gray-900">
-                    {job.results.final_hbonds}
+                  <dt className="text-sm text-muted-foreground">Seed</dt>
+                  <dd className="text-base font-medium text-foreground">
+                    {job.params.seed}
                   </dd>
                 </div>
               )}
             </div>
-          </div>
+          </CardContent>
+        </Card>
+
+        {job.results && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {job.results.residue_count !== undefined && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Residues</dt>
+                    <dd className="text-base font-medium text-foreground">
+                      {job.results.residue_count}
+                    </dd>
+                  </div>
+                )}
+                {job.results.atom_count !== undefined && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Atoms</dt>
+                    <dd className="text-base font-medium text-foreground">
+                      {job.results.atom_count}
+                    </dd>
+                  </div>
+                )}
+                {job.results.frame_count !== undefined && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Frames</dt>
+                    <dd className="text-base font-medium text-foreground">
+                      {job.results.frame_count}
+                    </dd>
+                  </div>
+                )}
+                {job.results.final_potential !== undefined && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Final Energy</dt>
+                    <dd className="text-base font-medium text-foreground">
+                      {job.results.final_potential.toFixed(2)}
+                    </dd>
+                  </div>
+                )}
+                {job.results.final_rg !== undefined && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">
+                      Radius of Gyration
+                    </dt>
+                    <dd className="text-base font-medium text-foreground">
+                      {job.results.final_rg.toFixed(1)} A
+                    </dd>
+                  </div>
+                )}
+                {job.results.final_hbonds !== undefined && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">H-bonds</dt>
+                    <dd className="text-base font-medium text-foreground">
+                      {job.results.final_hbonds}
+                    </dd>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {job.status === "completed" && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
-              Downloads
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => handleDownload("trajectory")}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Trajectory (.up)
-              </button>
-              <button
-                onClick={() => handleDownload("log")}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Log File
-              </button>
-              <button
-                onClick={() => handleDownload("vtf")}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                VMD File (.vtf)
-              </button>
-            </div>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Downloads</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => handleDownload("trajectory")}
+                  className="gap-2"
+                >
+                  <HugeiconsIcon icon={Download01Icon} size={16} />
+                  Trajectory (.up)
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleDownload("log")}
+                  className="gap-2"
+                >
+                  <HugeiconsIcon icon={Download01Icon} size={16} />
+                  Log File
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleDownload("vtf")}
+                  className="gap-2"
+                >
+                  <HugeiconsIcon icon={Download01Icon} size={16} />
+                  VMD File (.vtf)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 export interface SimulationParams {
   duration: number;
@@ -63,57 +69,42 @@ export default function SimulationForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Settings */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gray-900">Basic Settings</h3>
+        <h3 className="text-lg font-medium text-foreground">Basic Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="duration"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Duration
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="duration">Duration</Label>
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="number"
                 id="duration"
                 value={duration}
                 onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)}
                 min={1}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 disabled={disabled}
               />
-              <span className="text-sm text-gray-500">time units</span>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                time units
+              </span>
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="temperature"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Temperature
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="temperature">Temperature</Label>
+            <Input
               type="number"
               id="temperature"
               value={temperature}
               onChange={(e) => setTemperature(parseFloat(e.target.value) || 0)}
               step={0.1}
               min={0.1}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               disabled={disabled}
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="frameInterval"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Frame Interval
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="frameInterval">Frame Interval</Label>
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="number"
                 id="frameInterval"
                 value={frameInterval}
@@ -121,27 +112,20 @@ export default function SimulationForm({
                   setFrameInterval(parseInt(e.target.value, 10) || 0)
                 }
                 min={1}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 disabled={disabled}
               />
-              <span className="text-sm text-gray-500">frames</span>
+              <span className="text-sm text-muted-foreground">frames</span>
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="seed"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Random Seed (optional)
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="seed">Random Seed (optional)</Label>
+            <Input
               type="number"
               id="seed"
               value={seed}
               onChange={(e) => setSeed(e.target.value)}
               placeholder="Leave empty for random"
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               disabled={disabled}
             />
           </div>
@@ -149,109 +133,83 @@ export default function SimulationForm({
       </div>
 
       {/* Advanced Settings Toggle */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         disabled={disabled}
+        className="gap-2 text-muted-foreground hover:text-foreground"
       >
-        {showAdvanced ? (
-          <ChevronUp className="w-4 h-4" />
-        ) : (
-          <ChevronDown className="w-4 h-4" />
-        )}
+        <HugeiconsIcon
+          icon={showAdvanced ? ArrowUp01Icon : ArrowDown01Icon}
+          size={16}
+        />
         Advanced Settings
-      </button>
+      </Button>
 
       {/* Advanced Settings */}
       {showAdvanced && (
-        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="forceField"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Force Field
-              </label>
-              <select
-                id="forceField"
-                value={forceField}
-                onChange={(e) => setForceField(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                disabled={disabled}
-              >
-                <option value="ff_2.1">ff_2.1</option>
-              </select>
-            </div>
+        <Card className="bg-muted/50">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="forceField">Force Field</Label>
+                <Select
+                  id="forceField"
+                  value={forceField}
+                  onChange={(e) => setForceField(e.target.value)}
+                  disabled={disabled}
+                >
+                  <option value="ff_2.1">ff_2.1</option>
+                </Select>
+              </div>
 
-            <div>
-              <label
-                htmlFor="hbScale"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                H-Bond Scale
-              </label>
-              <input
-                type="number"
-                id="hbScale"
-                value={hbScale}
-                onChange={(e) => setHbScale(parseFloat(e.target.value) || 0)}
-                step={0.1}
-                min={0}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                disabled={disabled}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="hbScale">H-Bond Scale</Label>
+                <Input
+                  type="number"
+                  id="hbScale"
+                  value={hbScale}
+                  onChange={(e) => setHbScale(parseFloat(e.target.value) || 0)}
+                  step={0.1}
+                  min={0}
+                  disabled={disabled}
+                />
+              </div>
 
-            <div>
-              <label
-                htmlFor="envScale"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Environment Scale
-              </label>
-              <input
-                type="number"
-                id="envScale"
-                value={envScale}
-                onChange={(e) => setEnvScale(parseFloat(e.target.value) || 0)}
-                step={0.1}
-                min={0}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                disabled={disabled}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="envScale">Environment Scale</Label>
+                <Input
+                  type="number"
+                  id="envScale"
+                  value={envScale}
+                  onChange={(e) => setEnvScale(parseFloat(e.target.value) || 0)}
+                  step={0.1}
+                  min={0}
+                  disabled={disabled}
+                />
+              </div>
 
-            <div>
-              <label
-                htmlFor="rotScale"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Rotamer Scale
-              </label>
-              <input
-                type="number"
-                id="rotScale"
-                value={rotScale}
-                onChange={(e) => setRotScale(parseFloat(e.target.value) || 0)}
-                step={0.1}
-                min={0}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                disabled={disabled}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="rotScale">Rotamer Scale</Label>
+                <Input
+                  type="number"
+                  id="rotScale"
+                  value={rotScale}
+                  onChange={(e) => setRotScale(parseFloat(e.target.value) || 0)}
+                  step={0.1}
+                  min={0}
+                  disabled={disabled}
+                />
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      <button
-        type="submit"
-        disabled={disabled}
-        className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
+      <Button type="submit" disabled={disabled} className="w-full" size="lg">
         {disabled ? "Submitting..." : "Run Simulation"}
-      </button>
+      </Button>
     </form>
   );
 }

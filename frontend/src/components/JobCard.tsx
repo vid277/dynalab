@@ -1,5 +1,15 @@
 import { Link } from "react-router-dom";
-import { Clock, CheckCircle, XCircle, Loader2, Circle } from "lucide-react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import {
+  Clock01Icon,
+  CheckmarkCircle02Icon,
+  CancelCircleIcon,
+  Loading03Icon,
+  RecordIcon,
+  ArrowRight01Icon,
+} from "@hugeicons/core-free-icons";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export interface JobCardProps {
   job_id: string;
@@ -11,36 +21,39 @@ export interface JobCardProps {
   completed_at?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<
+  JobCardProps["status"],
+  {
+    icon: IconSvgElement;
+    variant: "muted" | "warning" | "info" | "success" | "destructive";
+    label: string;
+    animate?: boolean;
+  }
+> = {
   pending: {
-    icon: Circle,
-    color: "text-gray-400",
-    bgColor: "bg-gray-100",
+    icon: RecordIcon,
+    variant: "muted",
     label: "Pending",
   },
   queued: {
-    icon: Clock,
-    color: "text-yellow-500",
-    bgColor: "bg-yellow-50",
+    icon: Clock01Icon,
+    variant: "warning",
     label: "Queued",
   },
   running: {
-    icon: Loader2,
-    color: "text-blue-500",
-    bgColor: "bg-blue-50",
+    icon: Loading03Icon,
+    variant: "info",
     label: "Running",
     animate: true,
   },
   completed: {
-    icon: CheckCircle,
-    color: "text-green-500",
-    bgColor: "bg-green-50",
+    icon: CheckmarkCircle02Icon,
+    variant: "success",
     label: "Completed",
   },
   failed: {
-    icon: XCircle,
-    color: "text-red-500",
-    bgColor: "bg-red-50",
+    icon: CancelCircleIcon,
+    variant: "destructive",
     label: "Failed",
   },
 };
@@ -69,41 +82,41 @@ export default function JobCard({
   created_at,
 }: JobCardProps) {
   const config = statusConfig[status];
-  const StatusIcon = config.icon;
 
   return (
-    <Link
-      to={`/jobs/${job_id}`}
-      className="block p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <h3 className="text-base font-medium text-gray-900 truncate">
-              {original_filename}
-            </h3>
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}
-            >
-              <StatusIcon
-                className={`w-3 h-3 ${
-                  "animate" in config && config.animate ? "animate-spin" : ""
-                }`}
-              />
-              {config.label}
-            </span>
+    <Link to={`/jobs/${job_id}`} className="block">
+      <Card className="p-4 hover:border-muted-foreground/50 hover:shadow-sm transition-all">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3">
+              <h3 className="text-base font-medium text-foreground truncate">
+                {original_filename}
+              </h3>
+              <Badge variant={config.variant} className="gap-1">
+                <HugeiconsIcon
+                  icon={config.icon}
+                  size={12}
+                  className={config.animate ? "animate-spin" : ""}
+                />
+                {config.label}
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              T={temperature}, {duration} steps
+            </p>
           </div>
-          <p className="mt-1 text-sm text-gray-500">
-            T={temperature}, {duration} steps
-          </p>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              {formatTimeAgo(created_at)}
+            </span>
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              size={16}
+              className="text-muted-foreground"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">
-            {formatTimeAgo(created_at)}
-          </span>
-          <span className="text-gray-300">&rarr;</span>
-        </div>
-      </div>
+      </Card>
     </Link>
   );
 }

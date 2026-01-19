@@ -125,9 +125,7 @@ async def list_jobs(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc())
-    )
+    result = await db.execute(select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc()))
     jobs = result.scalars().all()
 
     return JobList(
@@ -152,9 +150,7 @@ async def get_job(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Job).where(Job.job_id == job_id, Job.user_id == current_user.id)
-    )
+    result = await db.execute(select(Job).where(Job.job_id == job_id, Job.user_id == current_user.id))
     job = result.scalar_one_or_none()
 
     if not job:
@@ -197,9 +193,7 @@ async def get_job_status(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Job.status).where(Job.job_id == job_id, Job.user_id == current_user.id)
-    )
+    result = await db.execute(select(Job.status).where(Job.job_id == job_id, Job.user_id == current_user.id))
     status = result.scalar_one_or_none()
 
     if not status:
@@ -215,9 +209,7 @@ async def download_file(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Job).where(Job.job_id == job_id, Job.user_id == current_user.id)
-    )
+    result = await db.execute(select(Job).where(Job.job_id == job_id, Job.user_id == current_user.id))
     job = result.scalar_one_or_none()
 
     if not job:

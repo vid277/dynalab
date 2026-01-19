@@ -7,9 +7,9 @@ Molecular dynamics simulation platform. Run protein folding simulations via a we
 - **backend/** - fastapi server + worker that handles job queue and talks to aws batch
 - **upside/** - the actual molecular dynamics engine (c++ with python bindings)
 
-## Getting started
+## Getting Started
 
-### 1. Start local services
+### 1. Start Local Services
 You need postgres and redis running locally. Easiest way:
 
 ```bash
@@ -17,7 +17,7 @@ cd backend
 docker compose up -d
 ```
 
-### 2. backend setup
+### 2. Backend Setup
 ```bash
 cd backend
 uv sync
@@ -35,7 +35,7 @@ AWS_REGION=...
 S3_OUTPUT_BUCKET=...
 ```
 
-### 3. Frontend setup
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install

@@ -10,6 +10,7 @@ import {
   Clock01Icon,
   Loading03Icon,
   RecordIcon,
+  Logout01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -93,6 +96,7 @@ const statusConfig: Record<
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { logout } = useAuth();
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +105,7 @@ export default function JobDetailPage() {
     if (!id) return;
 
     try {
-      const response = await fetch(`${API_URL}/jobs/${id}`);
+      const response = await apiFetch(`/jobs/${id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch job");
       }
@@ -129,8 +133,15 @@ export default function JobDetailPage() {
     return () => clearInterval(interval);
   }, [id, job?.status]);
 
-  const handleDownload = (fileType: "trajectory" | "log" | "vtf") => {
-    window.open(`${API_URL}/jobs/${id}/download/${fileType}`, "_blank");
+  const handleDownload = async (fileType: "trajectory" | "log" | "vtf") => {
+    try {
+      const response = await apiFetch(`/jobs/${id}/download/${fileType}`);
+      if (response.ok) {
+        window.open(response.url, "_blank");
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
   };
 
   if (loading) {
@@ -149,12 +160,16 @@ export default function JobDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-card border-b border-border">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <Button variant="ghost" asChild className="gap-2">
               <Link to="/jobs">
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
                 Back to Jobs
               </Link>
+            </Button>
+            <Button variant="ghost" onClick={logout} className="gap-2">
+              <HugeiconsIcon icon={Logout01Icon} size={16} />
+              Logout
             </Button>
           </div>
         </header>
@@ -173,12 +188,16 @@ export default function JobDetailPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" asChild className="gap-2">
             <Link to="/jobs">
               <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
               Back to Jobs
             </Link>
+          </Button>
+          <Button variant="ghost" onClick={logout} className="gap-2">
+            <HugeiconsIcon icon={Logout01Icon} size={16} />
+            Logout
           </Button>
         </div>
       </header>

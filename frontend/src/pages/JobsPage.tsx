@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowReloadHorizontalIcon, Logout01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import JobCard from "../components/JobCard";
 import type { JobCardProps } from "../components/JobCard";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface JobsResponse {
   jobs: JobCardProps[];
 }
 
 export default function JobsPage() {
+  const { logout } = useAuth();
   const [jobs, setJobs] = useState<JobCardProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch(`${API_URL}/jobs`);
+      const response = await apiFetch("/jobs");
       if (!response.ok) {
         throw new Error("Failed to fetch jobs");
       }
@@ -49,12 +50,18 @@ export default function JobsPage() {
           <Link to="/" className="text-xl font-semibold text-foreground">
             Dynalab
           </Link>
-          <Button asChild>
-            <Link to="/" className="gap-2">
-              <HugeiconsIcon icon={Add01Icon} size={16} />
-              New Simulation
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild>
+              <Link to="/" className="gap-2">
+                <HugeiconsIcon icon={Add01Icon} size={16} />
+                New Simulation
+              </Link>
+            </Button>
+            <Button variant="ghost" onClick={logout} className="gap-2">
+              <HugeiconsIcon icon={Logout01Icon} size={16} />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

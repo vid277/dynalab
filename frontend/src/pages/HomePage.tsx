@@ -5,18 +5,20 @@ import {
   CloudUploadIcon,
   Menu01Icon,
   CheckmarkCircle02Icon,
+  Logout01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import SimulationForm from "../components/SimulationForm";
 import type { SimulationParams } from "../components/SimulationForm";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 export default function HomePage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,7 +85,7 @@ export default function HomePage() {
         );
       }
 
-      const response = await fetch(`${API_URL}/jobs`, {
+      const response = await apiFetch("/jobs", {
         method: "POST",
         body: formData,
       });
@@ -109,12 +111,18 @@ export default function HomePage() {
       <header className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">Dynalab</h1>
-          <Button variant="outline" asChild>
-            <Link to="/jobs" className="gap-2">
-              <HugeiconsIcon icon={Menu01Icon} size={16} />
-              View Jobs
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/jobs" className="gap-2">
+                <HugeiconsIcon icon={Menu01Icon} size={16} />
+                View Jobs
+              </Link>
+            </Button>
+            <Button variant="ghost" onClick={logout} className="gap-2">
+              <HugeiconsIcon icon={Logout01Icon} size={16} />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 

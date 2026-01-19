@@ -40,6 +40,7 @@ async def create_job(
     seed: int | None = Form(default=None),
     advanced_params: str | None = Form(default=None),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     if not pdb_file.filename or not pdb_file.filename.endswith(".pdb"):
         raise HTTPException(status_code=400, detail="Only .pdb files are allowed")
@@ -55,6 +56,7 @@ async def create_job(
             raise HTTPException(status_code=400, detail=f"Invalid advanced_params: {e}")
 
     job = Job(
+        user_id=current_user.id,
         original_filename=original_filename,
         duration=duration,
         temperature=temperature,
@@ -108,8 +110,13 @@ async def create_job(
 
 
 @router.get("", response_model=JobList)
-async def list_jobs(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Job).order_by(Job.created_at.desc()))
+async def list_jobs(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Job).where(Job.user_id == current_user.id).order_by(Job.created_at.desc())
+    )
     jobs = result.scalars().all()
 
     return JobList(
@@ -129,8 +136,14 @@ async def list_jobs(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{job_id}", response_model=JobDetail)
-async def get_job(job_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Job).where(Job.job_id == job_id))
+async def get_job(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Job).where(Job.job_id == job_id, Job.user_id == current_user.id)
+    )
     job = result.scalar_one_or_none()
 
     if not job:
@@ -168,8 +181,14 @@ async def get_job(job_id: UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{job_id}/status", response_model=JobStatus)
-async def get_job_status(job_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Job.status).where(Job.job_id == job_id))
+async def get_job_status(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Job.status).where(Job.job_id == job_id, Job.user_id == current_user.id)
+    )
     status = result.scalar_one_or_none()
 
     if not status:
@@ -183,8 +202,11 @@ async def download_file(
     job_id: UUID,
     file_type: Literal["trajectory", "log", "vtf"],
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(Job).where(Job.job_id == job_id))
+    result = await db.execute(
+        select(Job).where(Job.job_id == job_id, Job.user_id == current_user.id)
+    )
     job = result.scalar_one_or_none()
 
     if not job:

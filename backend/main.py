@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -16,6 +17,14 @@ from utils.rate_limit import limiter
 load_dotenv()
 
 
+def get_cors_origins() -> list[str]:
+    origins = ["http://localhost:5173"]
+    frontend_url = os.getenv("FRONTEND_URL")
+    if frontend_url:
+        origins.append(frontend_url)
+    return origins
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -28,7 +37,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

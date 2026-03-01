@@ -24,8 +24,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 type JobStatus = "pending" | "queued" | "running" | "completed" | "failed";
 
 interface JobParams {

@@ -15,7 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 load_dotenv()
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://dynalab:dynalab@localhost:5432/dynalab")
+
+def get_database_url() -> str:
+    url = os.getenv("DATABASE_URL", "postgresql+asyncpg://dynalab:dynalab@localhost:5432/dynalab")
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+DATABASE_URL = get_database_url()
 JOB_QUEUE = "simulation_jobs"
 POLL_INTERVAL = 2
 BATCH_CHECK_INTERVAL = 10

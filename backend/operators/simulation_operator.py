@@ -66,7 +66,7 @@ def submit_simulation_job(
             containerOverrides={
                 "command": command,
                 "environment": [
-                    {"name": "OMP_NUM_THREADS", "value": "2"},
+                    {"name": "OMP_NUM_THREADS", "value": "4"},
                 ],
             },
         )

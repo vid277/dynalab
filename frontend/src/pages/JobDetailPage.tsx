@@ -135,7 +135,8 @@ export default function JobDetailPage() {
     try {
       const response = await apiFetch(`/jobs/${id}/download/${fileType}`);
       if (response.ok) {
-        window.open(response.url, "_blank");
+        const data = await response.json();
+        window.open(data.url, "_blank");
       }
     } catch (err) {
       console.error("Download failed:", err);

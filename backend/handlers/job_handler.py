@@ -4,7 +4,6 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
-from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -235,6 +234,6 @@ async def download_file(
             ExpiresIn=3600,
         )
 
-        return RedirectResponse(url=presigned_url)
+        return {"url": presigned_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate download URL: {e}")

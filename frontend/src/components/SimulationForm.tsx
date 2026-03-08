@@ -89,7 +89,7 @@ export default function SimulationForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="temperature">Temperature</Label>
+            <Label htmlFor="temperature">Temperature (0.85 = 25°C, 0.89 = 37°C)</Label>
             <Input
               type="number"
               id="temperature"
